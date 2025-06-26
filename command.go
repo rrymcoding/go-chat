@@ -11,6 +11,8 @@ const (
 	CMD_ELEVATE
 	CMD_EXEC
 	CMD_SEND_ALL
+	CMD_LIST
+	CMD_MENU
 )
 
 type command struct {

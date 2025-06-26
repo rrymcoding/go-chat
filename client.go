@@ -36,6 +36,11 @@ func (c *client) readInput() {
 				client: c,
 				args:   args,
 			}
+		case "/list":
+			c.commands <- command{
+				id:     CMD_LIST,
+				client: c,
+			}
 		case "/join":
 			c.commands <- command{
 				id:     CMD_JOIN,
@@ -76,6 +81,11 @@ func (c *client) readInput() {
 				id:     CMD_QUIT,
 				client: c,
 			}
+		case "/menu":
+			c.commands <- command{
+				id:     CMD_MENU,
+				client: c,
+			}
 		default:
 			c.err(fmt.Errorf("unknown command: %s", cmd))
 		}
@@ -87,7 +97,10 @@ func (c *client) err(err error) {
 }
 
 func (c *client) msg(msg string) {
-	c.conn.Write([]byte("> " + msg + "\n"))
+	c.conn.Write([]byte(" " + msg + "\n\n"))
+}
+func (c *client) srv_msg(msg string) {
+	c.conn.Write([]byte("[server] " + msg + "\n\n"))
 }
 
 func (c *client) exec_client_command(sender *client) {

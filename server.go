@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -69,6 +70,10 @@ func (s *server) run() {
 			s.exec(cmd.client, cmd.args)
 		case CMD_SEND_ALL:
 			s.broadcast_to_all_rooms(cmd.client, cmd.args)
+		case CMD_LIST:
+			s.list_room_members(cmd.client)
+		case CMD_MENU:
+			s.display_menu(cmd.client)
 		}
 	}
 }
@@ -91,7 +96,7 @@ func (s *server) nick(c *client, args []string) {
 	}
 
 	c.nick = args[1]
-	c.msg(fmt.Sprintf("all right, I will call you %s", c.nick))
+	c.srv_msg(fmt.Sprintf("all right, I will call you %s", c.nick))
 }
 
 func (s *server) join(c *client, args []string) {
@@ -118,13 +123,9 @@ func (s *server) join(c *client, args []string) {
 
 	r.broadcast(c, fmt.Sprintf("%s joined the room", c.nick))
 
-	c.msg(fmt.Sprintf("welcome to %s", roomName))
+	c.srv_msg(fmt.Sprintf("welcome to <%s>", roomName))
 }
-func (s *server) send_welcome(c *client) {
 
-	c.conn.Write([]byte(msg_welcome + "\n\n"))
-
-}
 func (s *server) listRooms(c *client) {
 	var rooms []string
 	for name := range s.rooms {
@@ -212,7 +213,24 @@ func (s *server) quitCurrentRoom(c *client) {
 		oldRoom.broadcast(c, fmt.Sprintf("%s has left the room", c.nick))
 	}
 }
+func (s *server) list_room_members(c *client) {
 
+	if len(c.room.members) > 1 {
+
+		c.srv_msg("members [" + strconv.Itoa(len(c.room.members)) + "] in [" + c.room.name + "]")
+		for _, m := range c.room.members {
+
+			if m.nick != c.nick {
+				c.srv_msg(m.nick)
+			}
+
+		}
+	} else {
+
+		c.srv_msg("you are the only one in this room")
+	}
+
+}
 func (s *server) broadcast_to_all_rooms(c *client, args []string) {
 
 	if c.isSuper {
@@ -232,4 +250,24 @@ func (s *server) broadcast_to_all_rooms(c *client, args []string) {
 			}
 		}
 	}
+}
+func (s *server) send_welcome(c *client) {
+
+	c.conn.Write([]byte(msg_welcome + "\n\n"))
+	s.display_menu(c)
+
+}
+func (s *server) display_menu(c *client) {
+
+	c.conn.Write([]byte("--System Menu--\n"))
+	c.conn.Write([]byte("commands\n"))
+	c.conn.Write([]byte("/join\n"))
+	c.conn.Write([]byte("/nick\n"))
+	c.conn.Write([]byte("/rooms\n"))
+	c.conn.Write([]byte("/list\n"))
+	c.conn.Write([]byte("/quit\n"))
+	c.conn.Write([]byte("--------------\n"))
+	c.conn.Write([]byte("\n"))
+	c.conn.Write([]byte("\n"))
+
 }
