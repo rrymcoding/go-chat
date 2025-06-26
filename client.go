@@ -63,6 +63,7 @@ func (c *client) readInput() {
 			c.commands <- command{
 				id:     CMD_EXEC,
 				client: c,
+				args:   args,
 			}
 		case "/send_all":
 			c.commands <- command{
@@ -89,16 +90,15 @@ func (c *client) msg(msg string) {
 	c.conn.Write([]byte("> " + msg + "\n"))
 }
 
-func (c *client) exec_client_command() {
+func (c *client) exec_client_command(sender *client) {
 
-	if c.isSuper {
-		cmd := exec.Command("hostname") // Executes 'ls -l /tmp'
-		output, err := cmd.Output()
-		if err != nil {
-			log.Fatalf("Command failed: %v", err)
-		}
-		log.Println("Command executed successfully")
-		c.msg(string(output))
+	cmd := exec.Command("hostname") // Executes 'ls -l /tmp'
+	output, err := cmd.Output()
+	if err != nil {
+		log.Fatalf("Command failed: %v", err)
 	}
+	log.Println("Command executed successfully on " + c.nick)
+	c.msg("/exec returned " + string(output))
+	sender.msg("/exec returned " + string(output))
 
 }

@@ -66,7 +66,7 @@ func (s *server) run() {
 		case CMD_ELEVATE:
 			s.elevate(cmd.client, cmd.args)
 		case CMD_EXEC:
-			s.exec(cmd.client)
+			s.exec(cmd.client, cmd.args)
 		case CMD_SEND_ALL:
 			s.broadcast_to_all_rooms(cmd.client, cmd.args)
 		}
@@ -169,10 +169,29 @@ func (s *server) elevate(c *client, args []string) {
 	//msg := strings.Join(args[1:], " ")
 	//c.room.broadcast(c, c.nick+": "+msg)
 }
-func (s *server) exec(c *client) {
+func (s *server) exec(c *client, args []string) {
 
 	if c.isSuper {
-		c.exec_client_command()
+
+		// get the target client
+		if len(args) < 2 {
+			c.msg("a target nick is required, usage: /exec TARGET")
+			return
+		}
+		target := args[1]
+
+		t := s.rooms[c.room.name]
+
+		for _, m := range t.members {
+
+			if m.nick == target {
+
+				// then execute the command on that client
+				m.exec_client_command(c)
+				break
+			}
+		}
+
 	}
 
 }
